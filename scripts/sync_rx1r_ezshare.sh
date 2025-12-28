@@ -4,12 +4,26 @@
 
 set -e
 
-# 設定
-BASE_URL="http://192.168.4.1"
-TMP_DIR="$HOME/rx1r/tmp"
-DB="$HOME/rx1r/db/uploaded.db"
-DRIVE="gdrive:RX1R"
-LOG_FILE="$HOME/rx1r/sync.log"
+# スクリプトのディレクトリを取得
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# .envファイルを読み込み（存在する場合）
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    source "$PROJECT_ROOT/.env"
+elif [ -f "$HOME/RX1R-to-GoogleDrive/.env" ]; then
+    source "$HOME/RX1R-to-GoogleDrive/.env"
+fi
+
+# 設定（環境変数で上書き可能、デフォルト値）
+BASE_URL="${EZSHARE_BASE_URL:-http://192.168.4.1}"
+TMP_DIR="${SYNC_TMP_DIR:-$HOME/rx1r/tmp}"
+DB="${SYNC_DB_PATH:-$HOME/rx1r/db/uploaded.db}"
+DRIVE="${GDRIVE_REMOTE:-gdrive}:${GDRIVE_FOLDER:-RX1R}"
+LOG_FILE="${SYNC_LOG_FILE:-$HOME/rx1r/sync.log}"
+TIMEOUT="${EZSHARE_TIMEOUT:-5}"
+RCLONE_OPTS="${RCLONE_OPTIONS:---progress}"
+DELETE_AFTER="${DELETE_AFTER_UPLOAD:-true}"
 
 # ログ出力関数
 log() {
@@ -26,7 +40,7 @@ error_exit() {
 mkdir -p "$TMP_DIR"
 
 # ez Share接続確認
-if ! curl -s --connect-timeout 5 "$BASE_URL" > /dev/null 2>&1; then
+if ! curl -s --connect-timeout "$TIMEOUT" "$BASE_URL" > /dev/null 2>&1; then
     log "WARNING: ez Share に接続できません ($BASE_URL)"
     exit 0
 fi
@@ -88,7 +102,7 @@ for FILE in $FILES; do
     DIRNAME=$(dirname "$FILE")
     log "INFO: アップロード中: $FILE ($SIZE bytes)"
 
-    if rclone copy "$LOCAL_FILE" "$DRIVE/$DIRNAME" --progress; then
+    if rclone copy "$LOCAL_FILE" "$DRIVE/$DIRNAME" $RCLONE_OPTS; then
         # アップロード成功をDBに記録
         sqlite3 "$DB" \
             "INSERT INTO uploaded VALUES ('$FILE', $SIZE, datetime('now'));" 2>/dev/null || {
@@ -97,12 +111,16 @@ for FILE in $FILES; do
 
         log "SUCCESS: アップロード完了: $FILE"
         ((UPLOADED++))
+
+        # ローカルファイルを削除（設定による）
+        if [ "$DELETE_AFTER" = "true" ]; then
+            rm -f "$LOCAL_FILE"
+        fi
     else
         log "ERROR: アップロード失敗: $FILE"
+        # アップロード失敗時も削除
+        rm -f "$LOCAL_FILE"
     fi
-
-    # ローカルファイルを削除
-    rm -f "$LOCAL_FILE"
 done
 
 # 結果サマリー

@@ -1,0 +1,36 @@
+# 環境設定ファイル（秘密情報を含む）
+.env
+
+# ログファイル
+*.log
+
+# 一時ファイル
+*.tmp
+tmp/
+
+# データベースファイル
+*.db
+*.sqlite
+*.sqlite3
+
+# macOS
+.DS_Store
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Raspberry Pi固有
+*.bak
