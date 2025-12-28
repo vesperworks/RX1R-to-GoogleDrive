@@ -45,8 +45,8 @@ git clone https://github.com/your-username/RX1R-to-GoogleDrive.git
 cd RX1R-to-GoogleDrive
 
 # SDカード準備スクリプト実行
-chmod +x scripts/prepare-sd-card-mac.sh
-./scripts/prepare-sd-card-mac.sh
+chmod +x src/setup/mac-prepare-sd.sh
+./src/setup/mac-prepare-sd.sh
 ```
 
 スクリプトが以下を設定します：
@@ -73,8 +73,8 @@ git clone https://github.com/your-username/RX1R-to-GoogleDrive.git
 cd RX1R-to-GoogleDrive
 
 # 初期設定スクリプト実行
-chmod +x scripts/raspi-init.sh
-./scripts/raspi-init.sh
+chmod +x src/setup/pi-init.sh
+./src/setup/pi-init.sh
 
 # 再起動
 sudo reboot
@@ -123,8 +123,8 @@ DELETE_AFTER_UPLOAD="true"           # アップロード後の削除
 
 ```bash
 # セットアップスクリプト実行
-chmod +x scripts/setup.sh
-./scripts/setup.sh
+chmod +x src/setup/pi-setup-sync.sh
+./src/setup/pi-setup-sync.sh
 ```
 
 ### Step 7: Google Drive設定
@@ -152,7 +152,7 @@ rclone mkdir gdrive:RX1R
 nmcli dev wifi connect ezShare
 
 # 手動同期テスト
-~/sync_rx1r_ezshare.sh
+~/pi-sync.sh
 
 # ログ確認
 tail -f ~/rx1r/sync.log
@@ -164,7 +164,7 @@ tail -f ~/rx1r/sync.log
 crontab -e
 
 # 以下を追加（5分間隔で自動同期）
-*/5 * * * * /home/pi/sync_rx1r_ezshare.sh
+*/5 * * * * /home/pi/pi-sync.sh
 ```
 
 ## 📁 ディレクトリ構成
@@ -177,24 +177,29 @@ RX1R-to-GoogleDrive/
 ├── Instruction.md         # 詳細セットアップガイド
 ├── .env.sample            # 環境設定テンプレート
 ├── .gitignore             # Git除外設定
-└── scripts/
-    ├── prepare-sd-card-mac.sh    # Mac用SDカード準備
-    ├── raspi-init.sh             # Pi初期設定
-    ├── setup.sh                  # 同期環境セットアップ
-    └── sync_rx1r_ezshare.sh      # 同期スクリプト
+└── src/
+    ├── setup/             # セットアップ用スクリプト
+    │   ├── mac-prepare-sd.sh     # Mac用SDカード準備
+    │   ├── pi-init.sh            # Pi初期設定
+    │   └── pi-setup-sync.sh      # Pi同期環境セットアップ
+    └── runtime/           # 常用スクリプト
+        └── pi-sync.sh            # Pi同期スクリプト
 ```
 
 Raspberry Pi上の実行時構成：
 
 ```
 $HOME/
+├── RX1R-to-GoogleDrive/  # クローンしたリポジトリ
+│   ├── src/
+│   └── .env              # 環境設定ファイル
 ├── rx1r/
 │   ├── tmp/              # 一時ダウンロード
 │   ├── db/
 │   │   └── uploaded.db   # アップロード履歴DB
 │   ├── sync.log          # 同期ログ
 │   └── cron.log          # cronログ
-└── sync_rx1r_ezshare.sh  # 同期スクリプト
+└── pi-sync.sh            # 同期スクリプト（コピー）
 ```
 
 ## 🔧 トラブルシューティング
@@ -236,7 +241,7 @@ crontab -l
 grep CRON /var/log/syslog | tail -20
 
 # 手動実行でデバッグ
-~/sync_rx1r_ezshare.sh
+~/pi-sync.sh
 ```
 
 ### Google Driveアップロード失敗
@@ -260,7 +265,9 @@ rclone config reconnect gdrive:
 
 ## 🛠️ スクリプト詳細
 
-### prepare-sd-card-mac.sh（Mac用）
+### セットアップスクリプト（`src/setup/`）
+
+#### mac-prepare-sd.sh（Mac用）
 
 Raspberry Pi OS書き込み後のSDカード初期設定を自動化
 
@@ -269,7 +276,7 @@ Raspberry Pi OS書き込み後のSDカード初期設定を自動化
 - ホスト名設定
 - ユーザーパスワード設定
 
-### raspi-init.sh（Pi用）
+#### pi-init.sh（Pi用）
 
 Raspberry Pi初回起動後の初期設定
 
@@ -281,7 +288,7 @@ Raspberry Pi初回起動後の初期設定
 - メモリ最適化
 - 不要サービス無効化
 
-### setup.sh（Pi用）
+#### pi-setup-sync.sh（Pi用）
 
 RX1R同期環境のセットアップ
 
@@ -290,7 +297,9 @@ RX1R同期環境のセットアップ
 - SQLiteデータベース初期化
 - 同期スクリプト配置
 
-### sync_rx1r_ezshare.sh（Pi用・自動実行）
+### 常用スクリプト（`src/runtime/`）
+
+#### pi-sync.sh（Pi用）
 
 ez Share → Google Drive 同期の実行
 
@@ -352,10 +361,10 @@ SYNC_INTERVAL="5"  # 分単位
 crontab -e
 
 # 1分間隔（大量撮影時）
-* * * * * /home/pi/sync_rx1r_ezshare.sh
+* * * * * /home/pi/pi-sync.sh
 
 # 10分間隔（通常）
-*/10 * * * * /home/pi/sync_rx1r_ezshare.sh
+*/10 * * * * /home/pi/pi-sync.sh
 ```
 
 ### Google Driveフォルダ変更

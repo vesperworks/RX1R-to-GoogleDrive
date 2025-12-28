@@ -86,14 +86,16 @@ echo -e "${GREEN}[Phase 5] 同期スクリプトの配置${NC}"
 
 # スクリプトのパスを取得
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SYNC_SCRIPT="$SCRIPT_DIR/sync_rx1r_ezshare.sh"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+SYNC_SCRIPT="$PROJECT_ROOT/src/runtime/pi-sync.sh"
 
 if [ -f "$SYNC_SCRIPT" ]; then
-    cp "$SYNC_SCRIPT" ~/sync_rx1r_ezshare.sh
-    chmod +x ~/sync_rx1r_ezshare.sh
-    echo "同期スクリプトをコピーしました: ~/sync_rx1r_ezshare.sh"
+    cp "$SYNC_SCRIPT" ~/pi-sync.sh
+    chmod +x ~/pi-sync.sh
+    echo "同期スクリプトをコピーしました: ~/pi-sync.sh"
 else
-    echo -e "${YELLOW}警告: sync_rx1r_ezshare.sh が見つかりません${NC}"
+    echo -e "${YELLOW}警告: pi-sync.sh が見つかりません${NC}"
+    echo "  探したパス: $SYNC_SCRIPT"
     echo "後で手動で配置してください"
 fi
 
@@ -116,12 +118,12 @@ echo "   リモート名: gdrive"
 echo "   タイプ: drive (Google Drive)"
 echo ""
 echo "3. 同期スクリプトの動作確認"
-echo "   ~/sync_rx1r_ezshare.sh"
+echo "   ~/pi-sync.sh"
 echo ""
 echo "4. cron設定（自動実行）"
 echo "   crontab -e"
 echo "   以下を追加:"
-echo "   */5 * * * * /home/$USER/sync_rx1r_ezshare.sh"
+echo "   */5 * * * * /home/$USER/pi-sync.sh"
 echo ""
 echo "詳細は Instruction.md を参照してください"
 echo ""

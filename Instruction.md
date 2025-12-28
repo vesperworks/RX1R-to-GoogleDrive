@@ -42,8 +42,8 @@ cd RX1R-to-GoogleDrive
 ### Step 2: セットアップスクリプトの実行
 
 ```bash
-chmod +x scripts/setup.sh
-./scripts/setup.sh
+chmod +x src/setup/pi-setup-sync.sh
+./src/setup/pi-setup-sync.sh
 ```
 
 セットアップスクリプトは以下を自動実行します：
@@ -52,7 +52,7 @@ chmod +x scripts/setup.sh
 2. ✅ 必要ツールのインストール（curl, wget, jq, sqlite3, rclone）
 3. ✅ 作業ディレクトリ作成（`~/rx1r/{tmp,db}`）
 4. ✅ SQLiteデータベース初期化
-5. ✅ 同期スクリプトの配置（`~/sync_rx1r_ezshare.sh`）
+5. ✅ 同期スクリプトの配置（`~/pi-sync.sh`）
 
 ---
 
@@ -153,7 +153,7 @@ rclone mkdir gdrive:RX1R
 ### 1. 手動実行テスト
 
 ```bash
-~/sync_rx1r_ezshare.sh
+~/pi-sync.sh
 ```
 
 ### 2. ログ確認
@@ -188,20 +188,20 @@ crontab -e
 
 ```cron
 # RX1R自動同期（5分間隔）
-*/5 * * * * /home/pi/sync_rx1r_ezshare.sh >> /home/pi/rx1r/cron.log 2>&1
+*/5 * * * * /home/pi/pi-sync.sh >> /home/pi/rx1r/cron.log 2>&1
 ```
 
 ### cron間隔の調整例
 
 ```cron
 # 1分間隔（大量撮影時）
-* * * * * /home/pi/sync_rx1r_ezshare.sh
+* * * * * /home/pi/pi-sync.sh
 
 # 10分間隔（通常使用）
-*/10 * * * * /home/pi/sync_rx1r_ezshare.sh
+*/10 * * * * /home/pi/pi-sync.sh
 
 # 30分間隔（省電力モード）
-*/30 * * * * /home/pi/sync_rx1r_ezshare.sh
+*/30 * * * * /home/pi/pi-sync.sh
 ```
 
 ### cron動作確認
@@ -243,7 +243,7 @@ tail -f ~/rx1r/cron.log
 **解決策**:
 - お使いのez Shareカードが対応していない可能性があります
 - 代替API: `http://192.168.4.1/dir?dir=A:` を試してください
-- `scripts/sync_rx1r_ezshare.sh` の `BASE_URL` 設定を変更
+- `src/runtime/pi-sync.sh` の `BASE_URL` 設定を変更（または.envで設定）
 
 ### 問題3: Google Driveアップロード失敗
 
@@ -274,7 +274,7 @@ tail -f ~/rx1r/cron.log
    ```
 2. 同期スクリプトの多重起動チェック
    ```bash
-   ps aux | grep sync_rx1r_ezshare.sh
+   ps aux | grep pi-sync.sh
    ```
 
 ### 問題5: EXIF情報が消える
@@ -365,7 +365,7 @@ $HOME/
 │   │   └── uploaded.db   # アップロード管理DB
 │   ├── sync.log          # 同期ログ
 │   └── cron.log          # cronログ
-└── sync_rx1r_ezshare.sh  # 同期スクリプト
+└── pi-sync.sh            # 同期スクリプト（コピー）
 ```
 
 ### よくある質問（FAQ）
