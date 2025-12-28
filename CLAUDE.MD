@@ -1,3 +1,6 @@
+ALWAYS lang:ja
+You MUST answer the question and MUST then restate your answer.
+
 # CLAUDE.MD - Project Context
 
 ## Project Overview
