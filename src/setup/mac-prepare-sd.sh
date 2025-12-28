@@ -84,7 +84,27 @@ echo "  ✓ ssh ファイル作成完了"
 # Wi-Fi設定ファイル作成
 echo ""
 echo -e "${GREEN}[2/3] Wi-Fi設定ファイル作成${NC}"
-cat > "$BOOT_PATH/wpa_supplicant.conf" <<EOF
+
+# パスワードをハッシュ化（wpa_passphraseが利用可能な場合）
+if command -v wpa_passphrase &> /dev/null; then
+    # wpa_passphraseを使用してハッシュ化
+    WPA_PSK=$(wpa_passphrase "$WIFI_SSID" "$WIFI_PASSWORD" 2>/dev/null | grep -v '#psk' | grep 'psk=' | cut -d= -f2)
+    cat > "$BOOT_PATH/wpa_supplicant.conf" <<EOF
+country=$WIFI_COUNTRY
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="$WIFI_SSID"
+    psk=$WPA_PSK
+}
+EOF
+    echo "  ✓ wpa_supplicant.conf 作成完了（パスワードはハッシュ化済み）"
+else
+    # wpa_passphraseが利用できない場合は平文で保存（警告を表示）
+    echo -e "  ${YELLOW}注意: wpa_passphraseコマンドが見つかりません${NC}"
+    echo -e "  ${YELLOW}パスワードは平文で保存されます${NC}"
+    cat > "$BOOT_PATH/wpa_supplicant.conf" <<EOF
 country=$WIFI_COUNTRY
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -95,7 +115,8 @@ network={
     key_mgmt=WPA-PSK
 }
 EOF
-echo "  ✓ wpa_supplicant.conf 作成完了"
+    echo "  ✓ wpa_supplicant.conf 作成完了（警告: パスワードは平文）"
+fi
 
 # ホスト名設定用スクリプト作成
 echo ""
