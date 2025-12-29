@@ -44,12 +44,6 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-# エラーハンドリング
-error_exit() {
-    log "ERROR: $1"
-    exit 1
-}
-
 # 作業ディレクトリの確認・作成
 mkdir -p "$TMP_DIR"
 

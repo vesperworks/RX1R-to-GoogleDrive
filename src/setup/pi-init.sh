@@ -100,11 +100,18 @@ fi
 # Phase 6: メモリ分割最適化（GPU不要）
 echo ""
 echo -e "${GREEN}[Phase 6] メモリ分割最適化${NC}"
-if ! grep -q "^gpu_mem=" /boot/config.txt; then
-    echo "gpu_mem=16" | sudo tee -a /boot/config.txt > /dev/null
-    echo "  ✓ GPUメモリを16MBに設定（要再起動）"
+
+# Raspberry Pi OS Bookworm互換性: config.txtの場所を自動検出
+CONFIG_TXT="/boot/firmware/config.txt"
+if [ ! -f "$CONFIG_TXT" ]; then
+    CONFIG_TXT="/boot/config.txt"  # 旧バージョン（Bullseye以前）対応
+fi
+
+if ! grep -q "^gpu_mem=" "$CONFIG_TXT" 2>/dev/null; then
+    echo "gpu_mem=16" | sudo tee -a "$CONFIG_TXT" > /dev/null
+    echo "  ✓ GPUメモリを16MBに設定（要再起動）: $CONFIG_TXT"
 else
-    echo "  ✓ GPUメモリ設定は既に存在"
+    echo "  ✓ GPUメモリ設定は既に存在: $CONFIG_TXT"
 fi
 
 # Phase 7: 不要サービス無効化（省電力化）
@@ -171,8 +178,8 @@ echo ""
 echo "2. 再起動後、RX1R同期環境をセットアップ"
 echo "   git clone https://github.com/your-username/RX1R-to-GoogleDrive.git"
 echo "   cd RX1R-to-GoogleDrive"
-echo "   chmod +x scripts/setup.sh"
-echo "   ./scripts/setup.sh"
+echo "   chmod +x src/setup/pi-setup-sync.sh"
+echo "   ./src/setup/pi-setup-sync.sh"
 echo ""
 echo "3. 詳細手順は Instruction.md を参照"
 echo ""
