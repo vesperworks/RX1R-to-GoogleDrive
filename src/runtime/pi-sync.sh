@@ -36,6 +36,12 @@ LOG_FILE="${SYNC_LOG_FILE:-$HOME/rx1r/sync.log}"
 TIMEOUT="${EZSHARE_TIMEOUT:-5}"
 DELETE_AFTER="${DELETE_AFTER_UPLOAD:-true}"
 
+# Wi-Fi設定
+HOME_WIFI_SSID="${HOME_WIFI_SSID:-}"
+EZSHARE_SSID="${EZSHARE_SSID:-ez Share}"
+EZSHARE_PASSWORD="${EZSHARE_PASSWORD:-88888888}"
+WIFI_SWITCHED=false
+
 # rcloneオプションを配列として処理
 IFS=' ' read -r -a RCLONE_OPTS_ARRAY <<< "${RCLONE_OPTIONS:---progress}"
 
@@ -50,10 +56,81 @@ error_exit() {
     exit 1
 }
 
+# 現在のSSID取得
+get_current_ssid() {
+    nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes' | cut -d: -f2
+}
+
+# ez Shareが見えるか確認
+is_ezshare_visible() {
+    nmcli dev wifi list 2>/dev/null | grep -q "$EZSHARE_SSID"
+}
+
+# ez Shareに接続
+connect_ezshare() {
+    log "INFO: ez Share Wi-Fiに接続中..."
+    if sudo nmcli dev wifi connect "$EZSHARE_SSID" password "$EZSHARE_PASSWORD" 2>/dev/null; then
+        WIFI_SWITCHED=true
+        sleep 3  # 接続安定待ち
+        return 0
+    else
+        log "WARNING: ez Share接続失敗"
+        return 1
+    fi
+}
+
+# 自宅Wi-Fiに戻る
+connect_home_wifi() {
+    if [ -z "$HOME_WIFI_SSID" ]; then
+        log "WARNING: HOME_WIFI_SSIDが設定されていません"
+        return 1
+    fi
+    log "INFO: 自宅Wi-Fiに接続中..."
+    if sudo nmcli connection up "$HOME_WIFI_SSID" 2>/dev/null; then
+        WIFI_SWITCHED=false
+        return 0
+    else
+        log "ERROR: 自宅Wi-Fi接続失敗"
+        return 1
+    fi
+}
+
+# 終了時に自宅Wi-Fiに戻る
+cleanup() {
+    if [ "$WIFI_SWITCHED" = true ] && [ -n "$HOME_WIFI_SSID" ]; then
+        log "INFO: クリーンアップ: 自宅Wi-Fiに戻ります"
+        connect_home_wifi
+    fi
+}
+trap cleanup EXIT
+
 # 作業ディレクトリの確認・作成
 mkdir -p "$TMP_DIR"
 
-# ez Share接続確認
+# Wi-Fi自動切り替え（HOME_WIFI_SSIDが設定されている場合のみ）
+if [ -n "$HOME_WIFI_SSID" ]; then
+    # 現在のSSIDを確認
+    CURRENT_SSID=$(get_current_ssid)
+
+    # 既にez Shareに接続中でなければ
+    if [ "$CURRENT_SSID" != "$EZSHARE_SSID" ]; then
+        # ez Shareが見えるかスキャン
+        sudo nmcli dev wifi rescan 2>/dev/null || true
+        sleep 2
+
+        if is_ezshare_visible; then
+            if ! connect_ezshare; then
+                log "WARNING: ez Share接続失敗、次回実行時に再試行します"
+                exit 0
+            fi
+        else
+            log "INFO: ez Shareが見つかりません（カメラ電源OFF？）"
+            exit 0
+        fi
+    fi
+fi
+
+# ez Share接続確認（HTTP疎通）
 if ! curl -s --connect-timeout "$TIMEOUT" "$BASE_URL" > /dev/null 2>&1; then
     log "WARNING: ez Share に接続できません ($BASE_URL)"
     exit 0
