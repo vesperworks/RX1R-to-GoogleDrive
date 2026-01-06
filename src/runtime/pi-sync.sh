@@ -58,12 +58,12 @@ error_exit() {
 
 # 現在のSSID取得
 get_current_ssid() {
-    nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes' | cut -d: -f2
+    nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes' | cut -d: -f2 || echo ""
 }
 
 # ez Shareが見えるか確認
 is_ezshare_visible() {
-    nmcli dev wifi list 2>/dev/null | grep -q "$EZSHARE_SSID"
+    nmcli dev wifi list 2>/dev/null | grep -q "$EZSHARE_SSID" || return 1
 }
 
 # ez Shareに接続
