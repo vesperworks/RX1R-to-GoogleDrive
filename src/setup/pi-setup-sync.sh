@@ -80,9 +80,37 @@ echo "データベース作成完了: ~/rx1r/db/uploaded.db"
 echo "テーブル構造確認:"
 sqlite3 ~/rx1r/db/uploaded.db ".schema"
 
-# Phase 5: 同期スクリプトの配置
+# Phase 5: ez Share Wi-Fi接続プロファイル作成
 echo ""
-echo -e "${GREEN}[Phase 5] 同期スクリプトの配置${NC}"
+echo -e "${GREEN}[Phase 5] ez Share Wi-Fi接続プロファイル作成${NC}"
+
+# .envからパスワードを読み込み
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+ENV_FILE="$PROJECT_ROOT/.env"
+
+EZSHARE_SSID="ez Share"
+EZSHARE_PASSWORD=""
+
+if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    source <(grep -E '^EZSHARE_(SSID|PASSWORD)=' "$ENV_FILE" || true)
+fi
+
+if [ -z "$EZSHARE_PASSWORD" ]; then
+    read -p "ez Shareのパスワードを入力してください (デフォルト: 88888888): " input_password
+    EZSHARE_PASSWORD="${input_password:-88888888}"
+fi
+
+# 既存の接続を削除して再作成
+sudo nmcli connection delete ezshare 2>/dev/null || true
+sudo nmcli connection add type wifi con-name "ezshare" ifname wlan0 ssid "$EZSHARE_SSID" \
+    wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$EZSHARE_PASSWORD"
+echo "ez Share接続プロファイルを作成しました: ezshare"
+
+# Phase 6: 同期スクリプトの配置
+echo ""
+echo -e "${GREEN}[Phase 6] 同期スクリプトの配置${NC}"
 
 # スクリプトのパスを取得
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -107,20 +135,15 @@ echo "=========================================="
 echo ""
 echo -e "${YELLOW}次のステップ：${NC}"
 echo ""
-echo "1. ez Share Wi-Fi接続設定"
-echo "   nmcli dev wifi list"
-echo "   nmcli dev wifi connect 'ez Share'"
-echo "   (パスワードが必要な場合: nmcli dev wifi connect 'ez Share' password 12345678)"
-echo ""
-echo "2. rclone設定（Google Drive接続）"
+echo "1. rclone設定（Google Drive接続）"
 echo "   rclone config"
 echo "   リモート名: gdrive"
 echo "   タイプ: drive (Google Drive)"
 echo ""
-echo "3. 同期スクリプトの動作確認"
+echo "2. 同期スクリプトの動作確認"
 echo "   ~/pi-sync.sh"
 echo ""
-echo "4. cron設定（自動実行）"
+echo "3. cron設定（自動実行）"
 echo "   crontab -e"
 echo "   以下を追加:"
 echo "   */5 * * * * /home/$USER/pi-sync.sh"

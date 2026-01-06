@@ -69,7 +69,8 @@ is_ezshare_visible() {
 # ez Shareに接続
 connect_ezshare() {
     log "INFO: ez Share Wi-Fiに接続中..."
-    if sudo nmcli dev wifi connect "$EZSHARE_SSID" password "$EZSHARE_PASSWORD" 2>/dev/null; then
+    # 保存済み接続プロファイルを使用（事前にpi-setup-sync.shで作成済み）
+    if sudo nmcli connection up ezshare 2>/dev/null; then
         WIFI_SWITCHED=true
         sleep 3  # 接続安定待ち
         return 0
