@@ -58,45 +58,36 @@ chmod +x src/setup/pi-setup-sync.sh
 
 ## ez Share Wi-Fi接続設定
 
-### 方法1: NetworkManager（nmcli）を使用
+### 自動接続（推奨）
+
+同期スクリプトが自動でWi-Fiを切り替えます。`.env`ファイルを作成してください：
+
+```bash
+cd ~/RX1R-to-GoogleDrive
+cp .env.sample .env
+nano .env  # HOME_WIFI_SSIDを自分の環境に合わせて編集
+```
+
+**動作フロー**:
+1. cronがスクリプト実行
+2. ez Shareが見つかればWi-Fi切り替え
+3. 同期処理
+4. 自宅Wi-Fiに戻る
+
+### 手動接続（テスト用）
 
 ```bash
 # 利用可能なWi-Fiを確認
 nmcli dev wifi list
 
-# ez Shareに接続（パスワードなしの場合）
-nmcli dev wifi connect 'ez Share'
+# ez Shareに接続
+sudo nmcli dev wifi connect 'ez Share' password 88888888
 
-# パスワードありの場合（初期パスワード: 12345678）
-nmcli dev wifi connect 'ez Share' password 12345678
-```
-
-### 方法2: wpa_supplicant設定（永続化）
-
-`/etc/wpa_supplicant/wpa_supplicant.conf` に追加：
-
-```
-network={
-    ssid="ez Share"
-    psk="12345678"
-    priority=1
-}
-```
-
-設定反映：
-
-```bash
-sudo wpa_cli -i wlan0 reconfigure
-```
-
-### 接続確認
-
-```bash
-# ez Share APIにアクセス
+# 接続確認
 curl http://192.168.4.1/cgi-bin/ezshare.cgi?op=ls
-
-# 正常な場合、ファイルリストが返ります
 ```
+
+**注意**: SSH中に手動でez Shareに接続すると、自宅Wi-Fiから切断されSSH接続が切れます。
 
 ---
 

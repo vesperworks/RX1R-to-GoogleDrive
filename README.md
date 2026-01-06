@@ -90,30 +90,26 @@ cd RX1R-to-GoogleDrive
 
 # .envファイルを作成
 cp .env.sample .env
-
-# 設定を編集
 nano .env
 ```
 
 **.envファイルの編集内容**:
 
 ```bash
-# ez Share Wi-Fi SD 設定
+# Wi-Fi自動切り替え設定（必須）
+HOME_WIFI_SSID="YourHomeWiFi"        # 自宅Wi-Fi SSID（同期後に戻る先）
 EZSHARE_SSID="ez Share"              # ez ShareのSSID
-EZSHARE_PASSWORD=""                  # パスワード（なければ空）
+EZSHARE_PASSWORD="88888888"          # ez Shareパスワード（デフォルト）
+
+# ez Share接続設定
 EZSHARE_BASE_URL="http://192.168.4.1"
+EZSHARE_TIMEOUT="5"
 
 # Google Drive 設定
 GDRIVE_REMOTE="gdrive"               # rcloneリモート名
 GDRIVE_FOLDER="RX1R"                 # アップロード先フォルダ
 
-# Wi-Fi 設定（自宅ネットワーク）
-WIFI_SSID="YourHomeWiFi"             # 自宅Wi-Fi SSID
-WIFI_PASSWORD="YourPassword"         # Wi-Fiパスワード
-WIFI_COUNTRY="JP"                    # 国コード
-
 # 同期設定
-SYNC_INTERVAL="5"                    # 同期間隔（分）
 DELETE_AFTER_UPLOAD="true"           # アップロード後の削除
 ```
 
@@ -328,9 +324,14 @@ nano .env
 **主要な設定項目**:
 
 ```bash
+# Wi-Fi自動切り替え設定（必須）
+HOME_WIFI_SSID="YourHomeWiFi"           # 自宅Wi-Fi SSID
+EZSHARE_SSID="ez Share"                 # ez ShareのSSID
+EZSHARE_PASSWORD="88888888"             # ez Shareパスワード（デフォルト）
+
 # ez Share設定
-EZSHARE_BASE_URL="http://192.168.4.1"  # ez ShareのURL
-EZSHARE_TIMEOUT="10"                    # 接続タイムアウト（秒）
+EZSHARE_BASE_URL="http://192.168.4.1"   # ez ShareのURL
+EZSHARE_TIMEOUT="5"                     # 接続タイムアウト（秒）
 
 # Google Drive設定
 GDRIVE_REMOTE="gdrive"                  # rcloneリモート名
@@ -338,13 +339,9 @@ GDRIVE_FOLDER="RX1R"                    # アップロード先フォルダ
 
 # 同期設定
 DELETE_AFTER_UPLOAD="true"              # アップロード後に削除
-SYNC_INTERVAL="5"                       # cron実行間隔（分）
 
 # rcloneオプション
-RCLONE_OPTIONS="--progress --transfers=1"  # 転送オプション
-
-# ログ設定
-SYNC_LOG_FILE="$HOME/rx1r/sync.log"    # ログファイルパス
+RCLONE_OPTIONS="--progress"             # 転送オプション
 ```
 
 設定変更後は同期スクリプトを再実行すれば反映されます（再起動不要）。
