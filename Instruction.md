@@ -65,10 +65,10 @@ chmod +x src/setup/pi-setup-sync.sh
 nmcli dev wifi list
 
 # ez Shareに接続（パスワードなしの場合）
-nmcli dev wifi connect ezShare
+nmcli dev wifi connect 'ez Share'
 
 # パスワードありの場合（初期パスワード: 12345678）
-nmcli dev wifi connect ezShare password 12345678
+nmcli dev wifi connect 'ez Share' password 12345678
 ```
 
 ### 方法2: wpa_supplicant設定（永続化）
@@ -77,7 +77,7 @@ nmcli dev wifi connect ezShare password 12345678
 
 ```
 network={
-    ssid="ezShare"
+    ssid="ez Share"
     psk="12345678"
     priority=1
 }
@@ -229,11 +229,11 @@ tail -f ~/rx1r/cron.log
    ```
 2. ez ShareのSSIDが見えるか確認
    ```bash
-   nmcli dev wifi list | grep ezShare
+   nmcli dev wifi list | grep 'ez Share'
    ```
 3. 手動接続
    ```bash
-   nmcli dev wifi connect ezShare
+   nmcli dev wifi connect 'ez Share'
    ```
 
 ### 問題2: ファイルリストが取得できない

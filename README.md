@@ -99,7 +99,7 @@ nano .env
 
 ```bash
 # ez Share Wi-Fi SD 設定
-EZSHARE_SSID="ezShare"              # ez ShareのSSID
+EZSHARE_SSID="ez Share"              # ez ShareのSSID
 EZSHARE_PASSWORD=""                  # パスワード（なければ空）
 EZSHARE_BASE_URL="http://192.168.4.1"
 
@@ -149,7 +149,7 @@ rclone mkdir gdrive:RX1R
 
 ```bash
 # ez Share接続（カメラの電源を入れる）
-nmcli dev wifi connect ezShare
+nmcli dev wifi connect 'ez Share'
 
 # 手動同期テスト
 ~/pi-sync.sh
@@ -221,10 +221,10 @@ ssh pi@192.168.x.x
 
 ```bash
 # ez Share SSID確認
-nmcli dev wifi list | grep ezShare
+nmcli dev wifi list | grep 'ez Share'
 
 # 手動接続
-nmcli dev wifi connect ezShare
+nmcli dev wifi connect 'ez Share'
 
 # 接続確認
 curl http://192.168.4.1/cgi-bin/ezshare.cgi?op=ls

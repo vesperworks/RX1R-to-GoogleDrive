@@ -53,7 +53,7 @@ This project implements a fully automated photo synchronization workflow for the
 ### 1. ez Share Integration
 - **Base URL**: `http://192.168.4.1`
 - **API Endpoint**: `/cgi-bin/ezshare.cgi?op=ls`
-- **Connection**: Direct Wi-Fi (SSID: ezShare)
+- **Connection**: Direct Wi-Fi (SSID: ez Share)
 - **File Access**: HTTP download via wget
 
 ### 2. Upload Tracking Database
@@ -149,7 +149,7 @@ crontab -l
 ## Troubleshooting
 
 ### Photos not syncing
-1. Check Pi Wi-Fi connection to ezShare
+1. Check Pi Wi-Fi connection to ez Share
 2. Verify ez Share API endpoint: `curl http://192.168.4.1/cgi-bin/ezshare.cgi?op=ls`
 3. Check cron logs: `grep CRON /var/log/syslog`
 

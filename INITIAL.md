@@ -73,7 +73,7 @@ sudo apt install -y \
 
 nmcli dev wifi list
 
-nmcli dev wifi connect ezShare
+nmcli dev wifi connect 'ez Share'
 # 初期状態はパスワードなし or 12345678
 
 
