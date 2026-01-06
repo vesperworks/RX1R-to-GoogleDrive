@@ -38,8 +38,9 @@ DELETE_AFTER="${DELETE_AFTER_UPLOAD:-true}"
 
 # Wi-Fi設定
 HOME_WIFI_SSID="${HOME_WIFI_SSID:-}"
+HOME_WIFI_PROFILE="${HOME_WIFI_PROFILE:-home}"  # nmcli接続プロファイル名
 EZSHARE_SSID="${EZSHARE_SSID:-ez Share}"
-EZSHARE_PASSWORD="${EZSHARE_PASSWORD:-}"
+EZSHARE_PROFILE="${EZSHARE_PROFILE:-ezshare}"   # nmcli接続プロファイル名
 WIFI_SWITCHED=false
 
 # rcloneオプションを配列として処理
@@ -70,7 +71,7 @@ is_ezshare_visible() {
 connect_ezshare() {
     log "INFO: ez Share Wi-Fiに接続中..."
     # 保存済み接続プロファイルを使用（事前にpi-setup-sync.shで作成済み）
-    if sudo nmcli connection up ezshare 2>/dev/null; then
+    if sudo nmcli connection up "$EZSHARE_PROFILE" 2>/dev/null; then
         WIFI_SWITCHED=true
         sleep 3  # 接続安定待ち
         return 0
@@ -87,7 +88,7 @@ connect_home_wifi() {
         return 1
     fi
     log "INFO: 自宅Wi-Fiに接続中..."
-    if sudo nmcli connection up "$HOME_WIFI_SSID" 2>/dev/null; then
+    if sudo nmcli connection up "$HOME_WIFI_PROFILE" 2>/dev/null; then
         WIFI_SWITCHED=false
         return 0
     else

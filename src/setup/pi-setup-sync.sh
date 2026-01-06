@@ -21,7 +21,8 @@ echo "  1. システムパッケージの更新"
 echo "  2. 必要なツールのインストール (curl, wget, jq, sqlite3, rclone)"
 echo "  3. 作業ディレクトリの作成 (~/rx1r/{tmp,db})"
 echo "  4. SQLiteデータベースの初期化"
-echo "  5. 同期スクリプトの配置"
+echo "  5. Wi-Fi接続プロファイル作成 (ez Share, 自宅Wi-Fi)"
+echo "  6. 同期スクリプトの配置"
 echo ""
 read -p "続行しますか？ (y/N): " -n 1 -r
 echo
@@ -107,6 +108,37 @@ sudo nmcli connection delete ezshare 2>/dev/null || true
 sudo nmcli connection add type wifi con-name "ezshare" ifname wlan0 ssid "$EZSHARE_SSID" \
     wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$EZSHARE_PASSWORD"
 echo "ez Share接続プロファイルを作成しました: ezshare"
+
+# Phase 5b: 自宅Wi-Fi接続プロファイル作成
+echo ""
+echo -e "${GREEN}[Phase 5b] 自宅Wi-Fi接続プロファイル作成${NC}"
+
+HOME_WIFI_SSID=""
+HOME_WIFI_PASSWORD=""
+
+if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    source <(grep -E '^HOME_WIFI_(SSID|PASSWORD)=' "$ENV_FILE" || true)
+fi
+
+if [ -z "$HOME_WIFI_SSID" ]; then
+    read -p "自宅Wi-FiのSSIDを入力してください: " HOME_WIFI_SSID
+fi
+
+if [ -z "$HOME_WIFI_SSID" ]; then
+    echo -e "${YELLOW}自宅Wi-Fi SSIDが未設定のため、スキップします${NC}"
+else
+    if [ -z "$HOME_WIFI_PASSWORD" ]; then
+        read -sp "自宅Wi-Fiのパスワードを入力してください: " HOME_WIFI_PASSWORD
+        echo ""
+    fi
+
+    # 既存の接続を削除して再作成
+    sudo nmcli connection delete home 2>/dev/null || true
+    sudo nmcli connection add type wifi con-name "home" ifname wlan0 ssid "$HOME_WIFI_SSID" \
+        wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$HOME_WIFI_PASSWORD"
+    echo "自宅Wi-Fi接続プロファイルを作成しました: home"
+fi
 
 # Phase 6: 同期スクリプトの配置
 echo ""
