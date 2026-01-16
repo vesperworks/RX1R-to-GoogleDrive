@@ -78,9 +78,10 @@ SKIPPED=0
 
 # 各ファイルを処理
 for FILE in "${FILES_ARRAY[@]}"; do
-    # データベースで既アップロード済みか確認（パラメータ化クエリ使用）
+    # データベースで既アップロード済みか確認（シングルクォートをエスケープ）
+    ESCAPED_FILE="${FILE//\'/\'\'}"
     EXISTS=$(sqlite3 "$DB" \
-        "SELECT 1 FROM uploaded WHERE path=? LIMIT 1;" "$FILE" 2>/dev/null || echo "")
+        "SELECT 1 FROM uploaded WHERE path='$ESCAPED_FILE' LIMIT 1;" 2>/dev/null || echo "")
 
     if [ -n "$EXISTS" ]; then
         ((SKIPPED++))
@@ -111,9 +112,9 @@ for FILE in "${FILES_ARRAY[@]}"; do
     log "INFO: アップロード中: $FILE ($SIZE bytes)"
 
     if rclone copy "$LOCAL_FILE" "$DRIVE/$DIRNAME" "${RCLONE_OPTS_ARRAY[@]}"; then
-        # アップロード成功をDBに記録（パラメータ化クエリ使用）
+        # アップロード成功をDBに記録（シングルクォートをエスケープ）
         sqlite3 "$DB" \
-            "INSERT INTO uploaded VALUES (?, ?, datetime('now'));" "$FILE" "$SIZE" 2>/dev/null || {
+            "INSERT INTO uploaded VALUES ('$ESCAPED_FILE', $SIZE, datetime('now'));" 2>/dev/null || {
             log "WARNING: DB記録失敗（ファイルは既にアップロード済み）: $FILE"
         }
 

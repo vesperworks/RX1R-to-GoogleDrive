@@ -134,11 +134,27 @@ done
 # Phase 8: Wi-Fi省電力モード無効化（安定性向上）
 echo ""
 echo -e "${GREEN}[Phase 8] Wi-Fi省電力モード無効化${NC}"
-if ! grep -q "wireless-power off" /etc/network/interfaces 2>/dev/null; then
-    echo "# Disable Wi-Fi power management" | sudo tee -a /etc/rc.local > /dev/null
-    echo "/sbin/iw wlan0 set power_save off" | sudo tee -a /etc/rc.local > /dev/null
+
+# systemdサービスを使用（rc.localは非推奨）
+WIFI_POWERSAVE_SERVICE="/etc/systemd/system/wifi-powersave-off.service"
+if [ ! -f "$WIFI_POWERSAVE_SERVICE" ]; then
+    sudo tee "$WIFI_POWERSAVE_SERVICE" > /dev/null <<'EOF'
+[Unit]
+Description=Disable Wi-Fi Power Management
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/iw wlan0 set power_save off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    sudo systemctl daemon-reload
+    sudo systemctl enable wifi-powersave-off.service
     sudo iw wlan0 set power_save off 2>/dev/null || echo "  (現在Wi-Fi未接続のためスキップ)"
-    echo "  ✓ Wi-Fi省電力モード無効化設定完了"
+    echo "  ✓ Wi-Fi省電力モード無効化サービス作成完了"
 else
     echo "  ✓ Wi-Fi省電力モード設定は既に存在"
 fi

@@ -123,7 +123,7 @@ echo ""
 echo -e "${GREEN}[3/3] 初回起動用設定ファイル作成${NC}"
 cat > "$BOOT_PATH/firstboot.sh" <<'EOFSCRIPT'
 #!/bin/bash
-# 初回起動時の設定（Pi上で自動実行される想定）
+# 初回起動時の設定（Pi上で手動実行）
 HOSTNAME_FILE="/etc/hostname"
 HOSTS_FILE="/etc/hosts"
 NEW_HOSTNAME="HOSTNAME_PLACEHOLDER"
@@ -139,8 +139,12 @@ fi
 sudo systemctl enable avahi-daemon
 sudo systemctl start avahi-daemon
 
-# 完了後、自分自身を削除
-rm -f /boot/firstboot.sh
+# 完了後、自分自身を削除（Bookworm/Bullseye両対応）
+if [ -f /boot/firmware/firstboot.sh ]; then
+    rm -f /boot/firmware/firstboot.sh
+elif [ -f /boot/firstboot.sh ]; then
+    rm -f /boot/firstboot.sh
+fi
 EOFSCRIPT
 
 # ホスト名をプレースホルダーから置換
@@ -180,7 +184,13 @@ echo "3. MacからSSH接続"
 echo "   ssh pi@${HOSTNAME}.local"
 echo "   パスワード: （設定したパスワード）"
 echo ""
-echo "4. Pi上で初期セットアップスクリプト実行"
+echo "4. Pi上でfirstboot.shを実行（ホスト名設定）"
+echo "   # Bookworm:"
+echo "   sudo bash /boot/firmware/firstboot.sh"
+echo "   # Bullseye以前:"
+echo "   sudo bash /boot/firstboot.sh"
+echo ""
+echo "5. Pi上で初期セットアップスクリプト実行"
 echo "   curl -sL https://raw.githubusercontent.com/your-repo/RX1R-to-GoogleDrive/main/src/setup/pi-init.sh | bash"
 echo "   または、リポジトリをクローンして実行"
 echo ""
